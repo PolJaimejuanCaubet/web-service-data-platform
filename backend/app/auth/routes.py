@@ -37,7 +37,7 @@ def remove_refresh_token_from_user(user_id: str, token: str):
 
     
 @router.post("/register")
-async def register(user: UserCreate, service: UserService = Depends(get_user_service)):
+def register(user: UserCreate, service: UserService = Depends(get_user_service)):
     
     new_user = service.create_user(user)
     
@@ -87,8 +87,6 @@ def login(data: UserLogin, service: UserService = Depends(get_user_service)):
 
 @router.post("/refresh")
 def refresh_token(authorization: Optional[str] = Header(None), service: UserService = Depends(get_user_service)):
-    
-    # Validación básica del Header
     if not authorization:
         raise HTTPException(status_code=401, detail="Missing Authorization header")
 
@@ -97,8 +95,6 @@ def refresh_token(authorization: Optional[str] = Header(None), service: UserServ
         raise HTTPException(status_code=401, detail="Invalid Authorization header format")
 
     refresh_token = parts[1]
-    
-    #Decodificar token (Verificar firma y expiración)
     payload = decode_token(refresh_token)
     if not payload:
         raise HTTPException(status_code=401, detail="Refresh token invalid or expired")
@@ -110,36 +106,27 @@ def refresh_token(authorization: Optional[str] = Header(None), service: UserServ
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid payload")
 
-    #Usar el SERVICIO para obtener el usuario
+    is_valid = service.validate_refresh_token(user_id, refresh_token)
+    if not is_valid:
+        raise HTTPException(status_code=401, detail="Invalid refresh token (not registered/revoked)")
+
     user = service.get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Verificación de Lista Blanca (Whitelist)
-    # Comprobamos si el token que nos envían existe en la DB del usuario
-    stored_tokens = user.get("refresh_tokens", [])
-    
-    # Buscamos si el token coincide con alguno de la lista
-    is_valid = any(rt.get("token") == refresh_token for rt in stored_tokens)
-    
-    if not is_valid:
-        # Si no está en la lista, puede que el usuario haya hecho logout o el token sea robado
-        raise HTTPException(status_code=401, detail="Invalid refresh token (not registered/revoked)")
-
-    # Generar nuevo Access Token
     token_data = {
-        "user_id": user["_id"],
-        "username": user["username"],
-        "role": user["role"]
+        "user_id": user_id,
+        "username": user.username,
+        "role": user.role
     }
     new_access = create_access_token(token_data)
 
-    # Devolvemos el nuevo access token y mantenemos el mismo refresh token
     return {
         "access_token": new_access,
         "refresh_token": refresh_token,
         "token_type": "Bearer",
     }
+    
 
 
 @router.post("/logout")

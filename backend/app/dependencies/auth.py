@@ -7,7 +7,7 @@ from backend.app.models import UserBase
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-def get_current_jwt_payload(token: str = Depends(oauth2_scheme)) -> dict:
+def get_current_jwt_payload(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, env.JWT_SECRET, algorithms=[env.JWT_ALGORITHM])
         return payload
@@ -37,18 +37,10 @@ def admin_required(user: UserBase = Depends(get_current_user)):
     return user
 
 
-def owner_or_admin(target_user_id: str, user: UserBase = Depends(get_current_user)):
+def owner_or_admin(target_user_id: str, current_user: UserBase = Depends(get_current_user)):
     
-    if user.role == "admin": 
+    if current_user.role == "admin": 
         return True
-    
-    # Aquí tenemos un pequeño problema:
-    # ¿Tiene tu modelo UserBase un campo '_id' para el ID de MongoDB?
-    # Si UserBase solo tiene 'username', 'email', etc., este campo puede faltar.
-    # Asumiendo que has añadido '_id' o 'user_id' a UserBase:
-    if str(user._id) == target_user_id: # Usar str() si el _id de UserBase es un ObjectID o str
-        return True
-    
-    # Alternativa si solo tienes el username en UserBase:
-    if user.username == target_user_id: # Si target_user_id es el username
+            
+    if current_user.username != target_user_id:
         raise HTTPException(status_code=403, detail="Not authorized")

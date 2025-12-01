@@ -44,6 +44,15 @@ class UserService:
                 }
             }
         )
+        
+    def validate_refresh_token(self, user_id: str, token: str) -> bool:
+        """
+        Verifica si un refresh token existe en la lista del usuario.
+        """
+        user_doc = self.collection.find_one(
+            {"_id": user_id, "refresh_tokens.token": token}
+        )
+        return user_doc is not None
 
     def revoke_refresh_token(self, user_id: str, token: str):
         self.collection.update_one(
@@ -89,3 +98,29 @@ class UserService:
             {"_id": user_id},
             {"$set": {"refresh_tokens": []}}
         )
+    
+    def get_all_users(self):
+        
+        cursor = self.collection.find({}).skip(1).limit(20)
+        
+        users_list = []
+        
+        for user_doc in cursor:
+            user_obj = UserBase.model_validate(user_doc)
+            users_list.append(user_obj)
+            
+        return users_list
+    
+    def update_role(self, user_id: str) -> Optional[UserBase]:
+        
+        result = self.collection.update_one(
+            {"_id": user_id},
+            {"$set": {"role": "admin"}}
+        )
+        
+        if result.matched_count == 0:
+            return None
+            
+        updated_user = self.collection.find_one({"_id": user_id})
+        
+        return UserBase.model_validate(updated_user)

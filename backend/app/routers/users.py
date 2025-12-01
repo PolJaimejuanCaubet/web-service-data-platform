@@ -109,9 +109,25 @@ async def get_all_users(
     service: UserService = Depends(get_user_service)
 ):
     
-    admin = admin_required(current_user)
+    admin_required(current_user)
     
-    if admin is None:
-        raise HTTPException(status_code=403, detail="User isn't the admin")
+    list_of_users = service.get_all_users()
     
-    admin = service.get_all_users(current_user.role)
+    return {"list_of_users": list_of_users}
+
+@router.put("{user_id}/role")
+async def update_role(
+    user_id: str,
+    current_user: UserBase = Depends(get_current_user),
+    service: UserService = Depends(get_user_service)
+):
+    
+    admin_required(current_user)
+    user = service.change_role(user_id)
+    
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {
+        "role": f"{user_id} | {user.role}"
+}
