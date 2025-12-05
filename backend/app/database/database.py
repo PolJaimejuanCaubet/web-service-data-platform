@@ -1,17 +1,26 @@
-from fastapi import Depends
-from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 from backend.app.config.config import settings as env
 
 
+class Database:
+    client: AsyncIOMotorClient = None
+    db = None
 
-def get_MongoClient():
-    client = MongoClient(env.MONGO_URI)
-    return client
 
-def get_db(client: MongoClient = Depends(get_MongoClient)):
-    db = client["client"]
-    return db
+db_manager = Database()
 
-def get_collection(db = Depends(get_db)):
-    collection = db["users"]
-    return collection
+
+async def get_db():
+    return db_manager.db
+
+
+async def get_users_collection():
+    return db_manager.db[env.DB_USER_COLLECTION]
+
+
+async def get_stocks_collection():
+    return db_manager.db[env.DB_STOCKS_COLLECTION]
+
+
+async def get_etl_logs_collection():
+    return db_manager.db[env.DB_ETL_LOGS_COLLECTION]
