@@ -4,4 +4,21 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "bcrypt==3.2.2",
+    "fastapi[standard]>=0.122.0",
+    "google>=3.0.0",
+    "google-genai>=1.52.0",
+    "httpx>=0.28.1",
+    "ipykernel>=7.1.0",
+    "mongomock>=4.3.0",
+    "motor>=3.7.1",
+    "passlib[bcrypt]>=1.7.4",
+    "pillow>=12.0.0",
+    "pydantic-settings>=2.12.0",
+    "pydantic[email]>=2.12.4",
+    "pymongo>=4.15.4",
+    "pytest>=9.0.1",
+    "python-jose[cryptography]>=3.5.0",
+    "uvicorn>=0.38.0",
+]
