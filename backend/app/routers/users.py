@@ -1,13 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
-from backend.app.models import UserUpdate, UserBase
+from backend.app.models.models_user import UserUpdate, UserBase
 from backend.app.services.user_service import UserService
 from backend.app.dependencies.services import *
-from app.dependencies.auth import *
+from backend.app.dependencies.auth import *
  
-
 router = APIRouter(prefix="/users")
-
-#pop password i refresh tokens is necessary ?
 
 @router.get("/{user_id}")
 async def get_user(
@@ -22,14 +19,11 @@ async def get_user(
             detail="You do not have permission to view this profile"
         )
 
-    user = service.get_user_by_id(user_id)
-    
+    user = await service.get_user_by_id(user_id) 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    if isinstance(user, dict):
-        user.pop("password", None)
-        user.pop("refresh_tokens", None)
+    user["_id"] = str(user["_id"])
+    user.pop("password", None)
     
     return user
 
@@ -56,15 +50,15 @@ async def update_user(
             detail="Invalid Input"
         )
         
-    updated_user = service.update_user(user_id, update_data)
+    updated_user = await service.update_user(user_id, update_data)
     
     if not updated_user:
         raise HTTPException(status_code=404, detail="User not found")
 
     return {"message": "User updated",
             "user_id": user_id,
-            "full_name": updated_user.full_name,
-            "email": updated_user.email
+            "full_name": updated_user["full_name"],
+            "email": updated_user["email"]
             }
     
     
@@ -81,26 +75,19 @@ async def delete_user(
             detail="Not owner of the profile"
         )
         
-    deletion_time = service.delete_user(user_id)
+    result = await service.delete_user(user_id)
     
-    if deletion_time is None:
+    if result is None:
         raise HTTPException(status_code=404, detail="User not found or already deleted")
-        
+    
+    deletion_time, email, full_name = result
+    
     return {
         "message": "User deleted successfully",
+        "full_name": full_name,
+        "email": email,
         "deleted_at": deletion_time.isoformat()
     }
-
-
-@router.post("/revoke_sessions")
-async def revoke_all_sessions(
-    current_user: UserBase = Depends(get_current_user), 
-    service: UserService = Depends(get_user_service)
-):
-    
-    service.revoke_all_sessions(current_user._id)
-    
-    return {"message": "All sessions have been revoked. You must log in again."}
 
 
 @router.get("")
@@ -111,11 +98,11 @@ async def get_all_users(
     
     admin_required(current_user)
     
-    list_of_users = service.get_all_users()
+    list_of_users = await service.get_all_users()
     
     return {"list_of_users": list_of_users}
 
-@router.put("{user_id}/role")
+@router.put("/{user_id}/role")
 async def update_role(
     user_id: str,
     current_user: UserBase = Depends(get_current_user),
@@ -123,11 +110,11 @@ async def update_role(
 ):
     
     admin_required(current_user)
-    user = service.change_role(user_id)
+    user = await service.update_role(user_id)
     
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     
     return {
-        "role": f"{user_id} | {user.role}"
+        "role": f"User with _id {user_id} now has new role - {user["role"]}"
 }
