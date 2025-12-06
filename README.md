@@ -13,25 +13,20 @@ pip install uv
 uv sync
 ```
 ### Environment variables
+Complete with your own variables
 ```bash
 cp .env.example .env
+cp backend/app/config/config.example.py backend/app/config/config.py
 ```
-
 ### Start the service
 ```bash
 uv run uvicorn backend.main:app --reload 
 ```
 The API will typically be available at:
 
-http://localhost:3000
+http://127.0.0.1/docs#/
 
-# Database Configuration
-DB_USER=user
-DB_PASSWORD=password
-DB_NAME=database_name
-
-
-📡 Example API Calls
+### Example API Calls
 
 Below are example REST endpoints your service may expose.
 
@@ -63,14 +58,22 @@ curl -X GET http://localhost:3000/api/data/42
 Delete Data
 curl -X DELETE http://localhost:3000/api/data/42
 
-📂 Project Structure (Example)
-/src
-  /routes        # API route definitions
-  /controllers   # Business logic
-  /services      # Data access layer
-  /models        # Data models / schemas
-/config          # Configuration files
-/tests           # Automated tests
-.env.example     # Sample environment configuration
-README.md        # Documentation
+### Project Structure
+
+/backend
+  /app
+    /auth          # Authentication and business logic
+    /config        # Configuration / settings modules
+    /dependencies  # Shared dependencies and injections
+    /models        # Data models / schemas
+    /services      # Service layer / business operations
+    /routes        # API route definitions
+  main.py          # Application entry point
+
+/frontend          # Frontend application (UI)
+.env.example       # Sample environment configuration
+pyproject.toml     # Project dependencies and settings (Python)
+uv.lock            # Lockfile for version pinning
+README.md          # Documentation
+
 
