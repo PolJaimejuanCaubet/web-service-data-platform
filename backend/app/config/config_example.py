@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     DB_USER_COLLECTION: str = "<db-user-collection-name>"
     DB_STOCKS_COLLECTION: str = "<db-stocks-collection-name>"
     DB_ETL_LOGS_COLLECTION: str = "<db-etl-logs-collection-name>"
+    DB_HISTORY_COLLECTION: str = "<db-history-collection-name>"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     class Config:

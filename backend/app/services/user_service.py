@@ -1,126 +1,87 @@
-from uuid import uuid4
 from datetime import datetime, timezone
 from typing import Optional
+from bson import ObjectId
 from fastapi import HTTPException
 from pymongo.collection import Collection
-from backend.app.models import *
+from backend.app.auth.jwt_utils import *
+from backend.app.models.models_user import *
 from backend.app.auth.hashing import hash_password, verify_password
+
 
 class UserService:
     def __init__(self, collection: Collection):
         self.collection = collection
 
-    def create_user(self, user_data: UserCreate):
-        if self.collection.find_one({"username": user_data.username}):
+    async def create_user(self, user_data: UserCreate):
+
+        existing_user = await self.collection.find_one({"username": user_data.username})
+        if existing_user:
             raise HTTPException(status_code=409, detail="User already exists")
 
         user_dict = user_data.model_dump()
-        user_dict["_id"] = str(uuid4())
         user_dict["password"] = hash_password(user_data.password)
-        user_dict["refresh_tokens"] = []
+        user_dict["role"] = "standard_user"
+        new_user = await self.collection.insert_one(user_dict)
+        created_user = await self.collection.find_one({"_id": new_user.inserted_id})
 
-        self.collection.insert_one(user_dict)
-        
-        return UserCreate.model_validate(user_dict)
+        return created_user
 
-    def authenticate_user(self, username: str, password: str):
-        user_doc = self.collection.find_one({"username": username})
-        
-        if not user_doc:
+    async def authenticate_user(self, username: str, password: str):
+
+        user = await self.collection.find_one({"username": username})
+
+        if not user:
             return None
-        
-        if not verify_password(password, user_doc["password"]):
+
+        if not verify_password(password, user["password"]):
             return None
-            
-        return UserBase.model_validate(user_doc)
 
-    def add_refresh_token(self, user_id: str, token: str, expires_at: datetime):
-        self.collection.update_one(
-            {"_id": user_id},
-            {"$push":
-                {"refresh_tokens":
-                    {"token": token, "expires_at": expires_at
-                    }
-                }
-            }
-        )
-        
-    def validate_refresh_token(self, user_id: str, token: str) -> bool:
-        """
-        Verifica si un refresh token existe en la lista del usuario.
-        """
-        user_doc = self.collection.find_one(
-            {"_id": user_id, "refresh_tokens.token": token}
-        )
-        return user_doc is not None
+        return user
 
-    def revoke_refresh_token(self, user_id: str, token: str):
-        self.collection.update_one(
-            {"_id": user_id},
-            {"$pull":
-                {"refresh_tokens":
-                    {"token": token
-                    }
-                }
-            }
-        )
-        
-    def get_user_by_id(self, user_id: str):
-        user = self.collection.find_one({"_id": user_id})
-        if user:
-            return UserBase.model_validate(user) 
+    async def get_user_by_id(self, user_id: str):
+        _id = ObjectId(user_id)
+        user = await self.collection.find_one({"_id": _id})
+        user.pop("password", None)
+        return user
 
-        return None
+    async def update_user(self, user_id: str, update_data: dict):
 
-    def update_user(self, user_id: str, update_data: dict):
-        self.collection.update_one(
-            {"_id": user_id},
-            {"$set": update_data}
-        )
-        return self.get_user_by_id(user_id)
+        _id = ObjectId(user_id)
+        await self.collection.update_one({"_id": _id}, {"$set": update_data})
+        return await self.get_user_by_id(user_id)
 
+    async def delete_user(self, user_id: str):
+        _id = ObjectId(user_id)
 
-    def delete_user(self, user_id: str) -> Optional[datetime]:
-        
+        user = await self.collection.find_one({"_id": _id})
+        if not user:
+            return None
+
+        email = user["email"]
+        full_name = user["full_name"]
+
         deletion_time = datetime.now(timezone.utc)
-        result = self.collection.update_one(
-            {"_id": user_id, "deleted_at": {"$exists": False}}, 
-            {"$set": {"deleted_at": deletion_time}}
-        )
-        
-        if result.matched_count == 0 and result.modified_count == 0:
+        result = await self.collection.delete_one({"_id": _id})
+        if result.deleted_count == 0:
             return None
-            
-        return deletion_time
-    
-    def revoke_all_sessions(self, user_id: str):
-        self.collection.update_one(
-            {"_id": user_id},
-            {"$set": {"refresh_tokens": []}}
-        )
-    
-    def get_all_users(self):
-        
-        cursor = self.collection.find({}).skip(1).limit(20)
-        
-        users_list = []
-        
-        for user_doc in cursor:
-            user_obj = UserBase.model_validate(user_doc)
-            users_list.append(user_obj)
-            
-        return users_list
-    
-    def update_role(self, user_id: str) -> Optional[UserBase]:
-        
-        result = self.collection.update_one(
-            {"_id": user_id},
-            {"$set": {"role": "admin"}}
-        )
-        
-        if result.matched_count == 0:
-            return None
-            
-        updated_user = self.collection.find_one({"_id": user_id})
-        
-        return UserBase.model_validate(updated_user)
+
+        return deletion_time, email, full_name
+
+    async def get_all_users(self):
+
+        user_list = []
+
+        async for user in self.collection.find({"role": {"$ne": "admin"}}):
+            user.pop("password", None)
+            user["_id"] = str(user["_id"])
+            user_list.append(user)
+
+        return user_list
+
+    async def update_role(self, user_id: str):
+
+        _id = ObjectId(user_id)
+
+        await self.collection.update_one({"_id": _id}, {"$set": {"role": "admin"}})
+
+        return await self.get_user_by_id(user_id)

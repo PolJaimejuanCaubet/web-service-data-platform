@@ -1,2 +1,2 @@
 .env
-backend/app/config/
+backend/app/config/config.py

@@ -24,3 +24,7 @@ async def get_stocks_collection():
 
 async def get_etl_logs_collection():
     return db_manager.db[env.DB_ETL_LOGS_COLLECTION]
+
+
+async def get_history_collection():
+    return db_manager.db[env.DB_HISTORY_COLLECTION]
