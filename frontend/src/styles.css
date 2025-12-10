@@ -1,0 +1,22 @@
+/* You can add global styles to this file, and also import other style files */
+/* src/styles.css */
+
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
+
+/* Asegurarse de que html y body ocupen toda la altura */
+html, body {
+  height: 100%;
+}

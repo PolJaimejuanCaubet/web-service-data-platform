@@ -1,0 +1,376 @@
+<!-- src/app/pages/dashboard/dashboard.component.html -->
+
+<div class="dashboard-container">
+  
+  <!-- HEADER -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1>📊 Stock Analytics Dashboard</h1>
+        <p class="welcome-text" *ngIf="currentUser">
+          Welcome, <strong>{{ currentUser.full_name || currentUser.username }}</strong>
+        </p>
+      </div>
+      <div class="header-actions">
+        <a 
+          *ngIf="currentUser?.role === 'admin'" 
+          routerLink="/admin" 
+          class="btn-admin">
+          🛡️ Admin Panel
+        </a>
+        <button (click)="logout()" class="btn-logout">
+          Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS - 4 VISTAS -->
+  <nav class="dashboard-nav">
+    <button 
+      class="nav-tab"
+      [class.active]="activeView === 'overview'"
+      (click)="switchView('overview')">
+      🏠 Overview
+    </button>
+    <button 
+      class="nav-tab"
+      [class.active]="activeView === 'stocks'"
+      (click)="switchView('stocks')">
+      📈 Stocks
+    </button>
+    <button 
+      class="nav-tab"
+      [class.active]="activeView === 'analysis'"
+      (click)="switchView('analysis')">
+      🔍 Analysis
+    </button>
+    <button 
+      class="nav-tab"
+      [class.active]="activeView === 'video'"
+      (click)="switchView('video')">
+      🎬 Video Generator
+    </button>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="dashboard-content">
+    
+    <!-- MENSAJES -->
+    <div class="alert alert-danger" *ngIf="errorMessage">
+      <strong>Error:</strong> {{ errorMessage }}
+    </div>
+    
+    <div class="alert alert-success" *ngIf="successMessage">
+      <strong>Success:</strong> {{ successMessage }}
+    </div>
+
+    <!-- LOADING -->
+    <div class="loading-overlay" *ngIf="isLoading">
+      <div class="spinner-large"></div>
+      <p>Loading...</p>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- OVERVIEW: Market Summary + Trend Analysis -->
+    <!-- ============================================ -->
+    <div class="view-container" *ngIf="activeView === 'overview'">
+      <h2>Market Overview</h2>
+      
+      <!-- SELECTOR DE TICKERS -->
+      <div class="ticker-selector">
+        <p class="selector-title">Select tickers to analyze:</p>
+        <div class="ticker-buttons">
+          <button 
+            *ngFor="let ticker of availableTickers"
+            (click)="toggleTickerSelection(ticker)"
+            class="ticker-select-btn"
+            [class.selected]="isTickerSelected(ticker)">
+            {{ ticker }}
+            <span class="checkmark" *ngIf="isTickerSelected(ticker)">✓</span>
+          </button>
+        </div>
+        <p class="selection-count" *ngIf="selectedTickersForOverview.length > 0">
+          {{ selectedTickersForOverview.length }} ticker(s) selected
+        </p>
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div class="empty-state" *ngIf="selectedTickersForOverview.length === 0">
+        <div class="empty-icon">📊</div>
+        <h3>No tickers selected</h3>
+        <p>Select one or more tickers above to see market statistics</p>
+      </div>
+
+      <!-- MARKET SUMMARY -->
+      <div *ngIf="marketSummary && selectedTickersForOverview.length > 0">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-info">
+              <h3>${{ marketSummary.average_price.toFixed(2) }}</h3>
+              <p>Average Price</p>
+            </div>
+          </div>
+
+          <div class="stat-card" [ngStyle]="{'background': getChangeColor(marketSummary.average_day_change)}">
+            <div class="stat-icon">📊</div>
+            <div class="stat-info">
+              <h3>{{ formatChange(marketSummary.average_day_change) }}</h3>
+              <p>Average Change</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-info">
+              <h3>{{ selectedTickersForOverview.length }}</h3>
+              <p>Selected Stocks</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOP GAINER & LOSER -->
+        <div class="top-stocks-grid">
+          <div class="top-stock-card gainer">
+            <h3>🚀 Top Gainer</h3>
+            <div class="stock-details">
+              <h2>{{ marketSummary.top_gainer.ticker }}</h2>
+              <p class="stock-name">{{ marketSummary.top_gainer.name }}</p>
+              <p class="stock-price">${{ marketSummary.top_gainer.price.toFixed(2) }}</p>
+              <p class="stock-change positive">{{ formatChange(marketSummary.top_gainer.day_change) }}</p>
+            </div>
+          </div>
+
+          <div class="top-stock-card loser">
+            <h3>📉 Top Loser</h3>
+            <div class="stock-details">
+              <h2>{{ marketSummary.top_loser.ticker }}</h2>
+              <p class="stock-name">{{ marketSummary.top_loser.name }}</p>
+              <p class="stock-price">${{ marketSummary.top_loser.price.toFixed(2) }}</p>
+              <p class="stock-change negative">{{ formatChange(marketSummary.top_loser.day_change) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 🆕 TREND ANALYSIS EN OVERVIEW -->
+        <div class="trend-section" *ngIf="trendAnalysis">
+          <h3>📊 Market Trends</h3>
+          <div class="trend-stats">
+            <div class="trend-stat up">
+              <h4>{{ trendAnalysis.up.length }}</h4>
+              <p>📈 Rising</p>
+            </div>
+            <div class="trend-stat down">
+              <h4>{{ trendAnalysis.down.length }}</h4>
+              <p>📉 Falling</p>
+            </div>
+            <div class="trend-stat stable">
+              <h4>{{ trendAnalysis.stable.length }}</h4>
+              <p>➖ Stable</p>
+            </div>
+          </div>
+
+          <div class="trend-lists">
+            <div class="trend-list" *ngIf="trendAnalysis.up.length > 0">
+              <h4>📈 Rising Stocks</h4>
+              <div class="mini-stock" *ngFor="let stock of trendAnalysis.up">
+                <span class="mini-ticker">{{ stock.ticker }}</span>
+                <span class="mini-change positive">{{ formatChange(stock.day_change) }}</span>
+              </div>
+            </div>
+
+            <div class="trend-list" *ngIf="trendAnalysis.down.length > 0">
+              <h4>📉 Falling Stocks</h4>
+              <div class="mini-stock" *ngFor="let stock of trendAnalysis.down">
+                <span class="mini-ticker">{{ stock.ticker }}</span>
+                <span class="mini-change negative">{{ formatChange(stock.day_change) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== -->
+    <!-- STOCKS: Individual Search -->
+    <!-- ==================== -->
+    <div class="view-container" *ngIf="activeView === 'stocks'">
+      <h2>Search Stock</h2>
+      
+      <div class="search-container">
+        <input 
+          type="text" 
+          [(ngModel)]="selectedTicker"
+          placeholder="Enter ticker symbol (e.g., AAPL)"
+          class="search-input"
+          (keyup.enter)="searchStock()"
+        />
+        <button (click)="searchStock()" class="btn-search">
+          🔍 Search
+        </button>
+      </div>
+
+      <div class="quick-select">
+        <p>Quick select:</p>
+        <button 
+          *ngFor="let ticker of availableTickers"
+          (click)="selectedTicker = ticker; searchStock()"
+          class="ticker-btn">
+          {{ ticker }}
+        </button>
+      </div>
+
+      <!-- STOCK RESULT -->
+      <div class="stock-result-card" *ngIf="selectedStock">
+        <div class="stock-header">
+          <h2>{{ selectedStock.ticker }}</h2>
+          <span class="currency-badge">{{ selectedStock.currency }}</span>
+        </div>
+        <h3 class="stock-name">{{ selectedStock.name }}</h3>
+        <div class="stock-metrics">
+          <div class="metric">
+            <span class="metric-label">Current Price</span>
+            <span class="metric-value">${{ selectedStock.price.toFixed(2) }}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Day Change</span>
+            <span class="metric-value" [ngStyle]="{'color': getChangeColor(selectedStock.day_change)}">
+              {{ formatChange(selectedStock.day_change) }}
+            </span>
+          </div>
+        </div>
+        <p class="last-updated">
+          Last updated: {{ selectedStock.last_updated | date:'medium' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- ==================== -->
+    <!-- ANALYSIS: AI Correlation + Prediction -->
+    <!-- ==================== -->
+    <div class="view-container" *ngIf="activeView === 'analysis'">
+      <h2>AI Analysis</h2>
+      
+      <div class="analysis-tabs">
+        <button (click)="loadAICorrelation()" class="analysis-btn">
+          🤖 AI Correlation
+        </button>
+        <button (click)="loadAIPrediction()" class="analysis-btn">
+          🔮 AI Prediction
+        </button>
+      </div>
+
+      <!-- INPUT PARA TICKER -->
+      <div class="search-container" *ngIf="!aiCorrelation && !aiPrediction">
+        <input 
+          type="text" 
+          [(ngModel)]="selectedTicker"
+          placeholder="Enter ticker for AI analysis"
+          class="search-input"
+        />
+      </div>
+
+      <div class="quick-select" *ngIf="!aiCorrelation && !aiPrediction">
+        <p>Quick select:</p>
+        <button 
+          *ngFor="let ticker of availableTickers"
+          (click)="selectedTicker = ticker"
+          class="ticker-btn">
+          {{ ticker }}
+        </button>
+      </div>
+
+      <!-- AI CORRELATION RESULT -->
+      <div class="analysis-result" *ngIf="aiCorrelation">
+        <h3>🤖 AI Correlation Analysis for {{ aiCorrelation.ticker }}</h3>
+        <div class="stock-mini-info">
+          <p><strong>Price:</strong> ${{ aiCorrelation.stock_data.price.toFixed(2) }}</p>
+          <p><strong>Day Change:</strong> 
+            <span [ngStyle]="{'color': getChangeColor(aiCorrelation.stock_data.day_change)}">
+              {{ formatChange(aiCorrelation.stock_data.day_change) }}
+            </span>
+          </p>
+        </div>
+        <div class="ai-analysis-box">
+          <p>{{ aiCorrelation.ai_analysis }}</p>
+        </div>
+      </div>
+
+      <!-- AI PREDICTION RESULT -->
+      <div class="prediction-result" *ngIf="aiPrediction">
+        <div class="prediction-header">
+          <h3>🔮 AI Prediction for {{ aiPrediction.ticker }}</h3>
+          <p class="prediction-price">Current: ${{ aiPrediction.price.toFixed(2) }}</p>
+        </div>
+        <div class="prediction-box">
+          <h4>Forecast</h4>
+          <p>{{ aiPrediction.prediction }}</p>
+        </div>
+        <div class="prediction-disclaimer">
+          <small>⚠️ This is an AI-generated prediction for educational purposes only. Not financial advice.</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== -->
+    <!-- VIDEO GENERATOR -->
+    <!-- ==================== -->
+    <div class="view-container" *ngIf="activeView === 'video'">
+      <h2>🎬 Video Generator</h2>
+      <p class="view-description">Generate AI-powered videos based on stock performance</p>
+      
+      <div class="search-container">
+        <input 
+          type="text" 
+          [(ngModel)]="selectedTicker"
+          placeholder="Enter ticker symbol"
+          class="search-input"
+        />
+        <button 
+          (click)="generateVideo()" 
+          class="btn-video"
+          [disabled]="isGeneratingVideo || !selectedTicker">
+          <span *ngIf="!isGeneratingVideo">🎬 Generate Video</span>
+          <span *ngIf="isGeneratingVideo">
+            <span class="spinner-small"></span>
+            Generating... (this may take several minutes)
+          </span>
+        </button>
+      </div>
+
+      <div class="quick-select">
+        <p>Quick select:</p>
+        <button 
+          *ngFor="let ticker of availableTickers"
+          (click)="selectedTicker = ticker"
+          class="ticker-btn">
+          {{ ticker }}
+        </button>
+      </div>
+
+      <!-- VIDEO INFO -->
+      <div class="info-box">
+        <h4>ℹ️ How it works</h4>
+        <ul>
+          <li>Select a stock ticker</li>
+          <li>Click "Generate Video" to create an AI-powered visualization</li>
+          <li>Wait a few minutes for the video to be generated</li>
+          <li>Watch and download your video</li>
+        </ul>
+      </div>
+
+      <!-- VIDEO PLAYER -->
+      <div class="video-result" *ngIf="videoUrl">
+        <h3>📹 Generated Video for {{ selectedTicker }}</h3>
+        <video [src]="videoUrl" controls class="stock-video">
+          Your browser does not support video playback.
+        </video>
+        <button (click)="downloadVideo()" class="btn-download">
+          💾 Download Video
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
