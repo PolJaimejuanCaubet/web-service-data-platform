@@ -376,6 +376,16 @@
   transform: translateY(-2px);
 }
 
+.btn-promote {
+  background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+  color: white;
+}
+
+.btn-promote:hover {
+  background: linear-gradient(135deg, #ffcd7b 0%, #0f3a5a 100%);
+  transform: translateY(-2px);
+}
+
 .btn-delete {
   background: #f5576c;
   color: white;
@@ -547,6 +557,56 @@
   transform: translateY(-2px);
 }
 
+/* ========================================
+   PROMOTION ZONE
+======================================== */
+.promotion-zone {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #fff9e6 0%, #ffe8cc 100%);
+  border: 2px solid #ffd89b;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-top: 2rem;
+}
+
+.promotion-zone h3 {
+  margin: 0 0 0.5rem 0;
+  color: #19547b;
+}
+
+.promotion-zone p {
+  margin: 0 0 1rem 0;
+  color: #666;
+}
+
+.btn-promote-large {
+  background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-promote-large:hover {
+  background: linear-gradient(135deg, #ffcd7b 0%, #0f3a5a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(25, 84, 123, 0.4);
+}
+
+.promotion-help {
+  display: block;
+  margin-top: 0.5rem;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* ========================================
+   DANGER ZONE
+======================================== */
 .danger-zone {
   grid-column: 1 / -1;
   background: #fff0f0;

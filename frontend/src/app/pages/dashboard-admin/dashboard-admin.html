@@ -138,6 +138,13 @@
                                     <button (click)="selectUser(user)" class="btn-action btn-edit" title="Edit user">
                                         ✏️ Edit
                                     </button>
+                                    <button 
+                                        *ngIf="user.role !== 'admin'"
+                                        (click)="promoteToAdmin(user)" 
+                                        class="btn-action btn-promote" 
+                                        title="Promote to admin">
+                                        ⬆️ Promote
+                                    </button>
                                     <button (click)="deleteUser(user)" class="btn-action btn-delete"
                                         [disabled]="user.id === currentAdmin?.id" title="Delete user">
                                         🗑️ Delete
@@ -231,6 +238,18 @@
                             </button>
                         </div>
                     </form>
+                </div>
+
+                <!-- PROMOTION ZONE (only for standard users) -->
+                <div class="promotion-zone" *ngIf="selectedUser.role !== 'admin'">
+                    <h3>⬆️ Promote to Administrator</h3>
+                    <p>Grant this user full administrative privileges. They will be able to manage all users and system settings.</p>
+                    <button (click)="promoteToAdmin(selectedUser)" class="btn-promote-large">
+                        🛡️ Promote to Administrator
+                    </button>
+                    <small class="promotion-help">
+                        This action will immediately grant admin privileges to this user.
+                    </small>
                 </div>
 
                 <!-- DANGER ZONE -->

@@ -14,8 +14,8 @@ import {
   providedIn: 'root'
 })
 export class StockService {
-  // ⚠️ IMPORTANTE: Usa tu IP de WSL, no localhost
-  private apiUrl = 'http://172.22.175.228:8000/etl';
+  
+  private apiUrl = 'http://localhost:8000/etl';
 
   constructor(private http: HttpClient) {}
 

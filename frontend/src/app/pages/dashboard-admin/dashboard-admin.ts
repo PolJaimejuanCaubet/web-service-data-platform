@@ -91,7 +91,6 @@ export class DashboardAdminComponent implements OnInit {
         if (Array.isArray(response)) {
           users = response;
         } else if (response && Array.isArray(response.list_of_users)) {
-          // ⭐ TU BACKEND DEVUELVE ESTO
           users = response.list_of_users;
         } else if (response && Array.isArray(response.users)) {
           users = response.users;
@@ -101,7 +100,7 @@ export class DashboardAdminComponent implements OnInit {
 
         // Filtrar usuarios válidos y agregar valores por defecto
         this.allUsers = users
-          .filter(u => u && (u.username || u.email)) // Solo usuarios con username o email
+          .filter(u => u && (u.username || u.email))
           .map(u => ({
             ...u,
             username: u.username || 'unknown',
@@ -196,6 +195,46 @@ export class DashboardAdminComponent implements OnInit {
       error: (error) => {
         console.error('❌ Failed to update user:', error);
         this.errorMessage = error.message || 'Failed to update user.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  /**
+   * Promueve un usuario a administrador
+   */
+  promoteToAdmin(user: UserResponse): void {
+    const confirmed = confirm(
+      `Are you sure you want to promote "${user.username}" to Administrator?\n\nThis will grant them full admin privileges.`
+    );
+
+    if (!confirmed) return;
+
+    this.isLoading = true;
+    this.clearMessages();
+
+    console.log('🔵 Promoting user to admin:', user.id);
+
+    this.http.put<any>(`${this.apiUrl}/users/${user.id}/role`, {}).subscribe({
+      next: (response) => {
+        console.log('✅ User promoted to admin:', response);
+        this.successMessage = `User "${user.username}" promoted to Administrator successfully!`;
+
+        // Recargar lista de usuarios
+        this.loadAllUsers();
+
+        if (this.selectedUser && this.selectedUser.id === user.id) {
+          this.selectedUser.role = 'admin';  // ✅ TypeScript sabe que selectedUser no es null
+        }
+
+        // Limpiar mensaje después de 3s
+        setTimeout(() => this.clearMessages(), 3000);
+
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('❌ Failed to promote user:', error);
+        this.errorMessage = error.error?.detail || 'Failed to promote user to admin.';
         this.isLoading = false;
       }
     });
