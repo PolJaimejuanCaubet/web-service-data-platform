@@ -7,16 +7,11 @@ Web service that provides and manages data through a clear and easy to use REST 
 git clone https://github.com/PolJaimejuanCaubet/web-service-data-platform.git
 cd web-service-data-platform
 ```
-### Install dependencies
+### To install dependencies and environment variables
+Complete .env with your own variables
 ```bash
-pip install uv
-uv sync
-```
-### Environment variables
-Complete with your own variables
-```bash
-cp .env.example .env
-cp backend/app/config/config.example.py backend/app/config/config.py
+chmod +x config.sh
+./config.sh
 ```
 ### Start backend and frontend service
 ```bash
@@ -39,50 +34,51 @@ http://localhost:4200
 
 Below are example REST endpoints your service may expose.
 
-Health Check
-curl -X GET http://localhost:3000/api/health
-
-
-Example Response
-
-{
-  "status": "ok",
-  "timestamp": "2025-01-01T12:00:00Z"
-}
-
-Get All Data
-curl -X GET http://localhost:3000/api/data
-
-Create a Data Entry
-curl -X POST http://localhost:3000/api/data \
+*Register*
+curl -X POST http://localhost:8000/auth/register \
   -H "Content-Type: application/json" \
-  -d '{
-        "name": "example",
-        "value": 123
-      }'
+  -d '{"full_name":"John","username":"john", "email":"john@test.com","password":"1234"}'
 
-Get Data by ID
-curl -X GET http://localhost:3000/api/data/42
+*Login*
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=john&password=1234"
 
-Delete Data
-curl -X DELETE http://localhost:3000/api/data/42
+*Get All Users* (Only Admin)
+curl -X GET http://localhost:8000/users
+
+*Get AI Correaltion*
+curl -X GET http://localhost:8000/etl/analytics/correlation/AAPL
 
 ### Project Structure
 
 /backend
   /app
-    /auth          # Authentication and business logic
-    /config        # Configuration / settings modules
-    /dependencies  # Shared dependencies and injections
-    /models        # Data models / schemas
-    /services      # Service layer / business operations
-    /routes        # API route definitions
-  main.py          # Application entry point
+    /auth                   # Authentication logic (register, login, JWT handling)
+    /config                 # Application configuration, settings & environment loading
+    /dependencies           # Shared dependency injections for routes (DB, services, auth)
+    /models                 # Pydantic models, request/response schemas, and database
+    /services               # Core business logic (ETL, analytics, data processing, etc.)
+    /routes                 # API route definitions grouped by feature (users, etl, auth)
+  main.py                   # FastAPI application entry point
 
-/frontend          # Frontend application (UI)
-.env.example       # Sample environment configuration
-pyproject.toml     # Project dependencies and settings (Python)
-uv.lock            # Lockfile for version pinning
-README.md          # Documentation
-
-
+/frontend                   # Angular frontend application (UI)
+  /src
+    /app
+      /guards               # Route guards (auth guard, admin guard, etc.)
+      /interceptors         # HTTP interceptors (e.g., add JWT token, handle errors)
+      /models               # Frontend interfaces/types for API responses
+      /pages                # All page-level components (views)
+        /dashboard          # User dashboard UI
+        /dashboard-admin    # Admin dashboard UI
+        /login              # Login page
+        /register           # Registration page
+      /services             # Frontend services (API clients, auth service, user service)
+      
+.env.example                # Template for environment variables
+backend.sh                  # Script to start the backend server
+config.sh                   # Script used for configuration setup tasks
+frontend.sh                 # Script to start the Angular frontend
+pyproject.toml              # Python dependencies and project configuration
+README.md                   # Full project documentation
+uv.lock                     # Locked dependency versions for reproducible builds
