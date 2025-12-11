@@ -39,7 +39,7 @@ export class DashboardAdminComponent implements OnInit {
     standardUsers: 0
   };
 
-  private apiUrl = 'http://localhost:8000';
+  private apiUrl = 'https://web-service-data-platform.onrender.com';
 
   constructor(
     private authService: AuthService,

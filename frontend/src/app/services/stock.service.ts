@@ -15,8 +15,8 @@ import {
 })
 export class StockService {
   
-  private apiUrl = 'http://localhost:8000/etl';
-
+  private apiUrl = 'https://web-service-data-platform.onrender.com';
+// https://web-service-data-platform.onrender.com/
   constructor(private http: HttpClient) {}
 
   runETL(ticker: string): Observable<any> {

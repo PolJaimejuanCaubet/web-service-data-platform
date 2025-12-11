@@ -18,7 +18,7 @@ import {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8000';
+  private apiUrl = 'https://web-service-data-platform.onrender.com';
   
   // BehaviorSubject para mantener el estado de autenticación
   // Emite true si hay token, false si no hay
