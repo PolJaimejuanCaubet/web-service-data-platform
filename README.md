@@ -18,13 +18,22 @@ Complete with your own variables
 cp .env.example .env
 cp backend/app/config/config.example.py backend/app/config/config.py
 ```
-### Start the service
+### Start backend and frontend service
 ```bash
-uv run uvicorn backend.main:app --reload 
+chmod +x backend.sh
+./backend.sh
 ```
-The API will typically be available at:
+The API will be available at:
 
 http://127.0.0.1/docs#/
+
+```bash
+chmod +x frontend.sh
+./frontend.sh
+```
+Frontend will be exposed at:
+
+http://localhost:4200
 
 ### Example API Calls
 
