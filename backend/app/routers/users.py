@@ -92,7 +92,7 @@ async def get_all_users(
 
     list_of_users = await service.get_all_users()
 
-    return {"list_of_users": list_of_users}
+    return list_of_users
 
 
 @router.put("/{user_id}/role")

@@ -30,28 +30,12 @@ async def lifespan(app: FastAPI):
         stock_collection = db_manager.db[env.DB_STOCKS_COLLECTION]
         log_collection = db_manager.db[env.DB_ETL_LOGS_COLLECTION]
         history_collection = db_manager.db[env.DB_HISTORY_COLLECTION]
-        service = DataService(stock_collection, log_collection, history_collection)
-
-        while True:
-            await service.scheduled_stock_updates(
-                [
-                    "TSLA",
-                    "META",
-                    "AAPL",
-                    "AMZN",
-                    "MSFT",
-                    "MSTR",
-                    "NVDA",
-                    "MA",
-                    "VS",
-                    "PLTR",
-                ]
-            )
-            await asyncio.sleep(30000)
+        DataService(stock_collection, log_collection, history_collection)
 
     asyncio.create_task(scheduled_task())
 
     yield
+    
     db_manager.client.close()
 
 
@@ -68,8 +52,3 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.get("/")
-async def serve_dashboard():
-    return FileResponse("frontend/dashboard.html")

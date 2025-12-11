@@ -14,7 +14,7 @@ router = APIRouter(prefix="/etl")
 async def run_etl_data_show(
     ticker: str, service: DataService = Depends(get_data_service)
 ):
-    data_saved = await service.run_etl_data_show(ticker)
+    data_saved = await service.run_etl_ticker(ticker)
 
     if not data_saved:
         raise HTTPException(status_code=404, detail=f"No data found for {ticker}")
@@ -114,26 +114,3 @@ async def analytics_prediction(
     ticker: str, service: DataService = Depends(get_data_service)
 ):
     return await service.ai_prediction(ticker)
-
-
-# 🍭 Propuesta de 5 endpoints analíticos (cumple B2 100%)
-# 1. /analytics/stock/summary — resumen estadístico
-# precio medio
-# precio max
-# precio min
-# número de símbolos analizados
-
-# 2. /analytics/stock/trending — top gainers & top losers
-# top 5 mayores subidas
-# top 5 mayores caídas
-
-# 3. /analytics/stock/video-matched — matching entre vídeo y cambios
-# compara day_change con sentimiento del vídeo generado
-# (negativo → crash, positivo → boom)
-
-# 4. /analytics/stock/history/{ticker} — evolución
-# Devuelve la evolución del ticker ordenada por timestamp
-
-# 5. /analytics/correlation — correlación precio-cambios
-# correlación pearson entre precio y day_change
-# si no quieres matemáticas → haz un “score manual” simple
