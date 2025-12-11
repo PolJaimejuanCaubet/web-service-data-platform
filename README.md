@@ -34,24 +34,28 @@ http://localhost:4200
 
 Below are example REST endpoints your service may expose.
 
-*Register*
+**Register**  
+```bash
 curl -X POST http://localhost:8000/auth/register \
   -H "Content-Type: application/json" \
   -d '{"full_name":"John","username":"john", "email":"john@test.com","password":"1234"}'
-
-*Login*
+```
+**Login**
+```bash
 curl -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=john&password=1234"
-
-*Get All Users* (Only Admin)
+```
+**Get All Users** (Only Admin)
+```bash
 curl -X GET http://localhost:8000/users
-
-*Get AI Correaltion*
+```
+**Get AI Correaltion**
+```bash
 curl -X GET http://localhost:8000/etl/analytics/correlation/AAPL
-
+```
 ### Project Structure
-
+```text
 /backend
   /app
     /auth                   # Authentication logic (register, login, JWT handling)
@@ -82,3 +86,4 @@ frontend.sh                 # Script to start the Angular frontend
 pyproject.toml              # Python dependencies and project configuration
 README.md                   # Full project documentation
 uv.lock                     # Locked dependency versions for reproducible builds
+```
