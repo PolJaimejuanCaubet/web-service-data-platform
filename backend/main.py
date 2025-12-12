@@ -1,6 +1,5 @@
 import asyncio
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
 from backend.app.routers.auth import router as auth_router
 from backend.app.routers.etl import router as data_router
 from backend.app.routers.users import router as user_router
@@ -24,15 +23,6 @@ async def lifespan(app: FastAPI):
     await db_manager.db[env.DB_STOCKS_COLLECTION].create_index("ticker", unique=True)
     await db_manager.db[env.DB_ETL_LOGS_COLLECTION].create_index("ticker")
     await db_manager.db[env.DB_HISTORY_COLLECTION].create_index("ticker")
-
-    async def scheduled_task():
-
-        stock_collection = db_manager.db[env.DB_STOCKS_COLLECTION]
-        log_collection = db_manager.db[env.DB_ETL_LOGS_COLLECTION]
-        history_collection = db_manager.db[env.DB_HISTORY_COLLECTION]
-        DataService(stock_collection, log_collection, history_collection)
-
-    asyncio.create_task(scheduled_task())
 
     yield
     
