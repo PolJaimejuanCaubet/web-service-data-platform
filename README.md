@@ -13,22 +13,34 @@ Complete .env with your own variables
 chmod +x config.sh
 ./config.sh
 ```
-### Start backend and frontend service
+### Start backend service
 ```bash
 chmod +x backend.sh
 ./backend.sh
 ```
-The API will be available at:
+The API locally will be available at:
 
-http://127.0.0.1/docs#/
+[localhost](http://127.0.0.1/docs#/)
+
+also to see all endpoints as it's deployed with **Render** you can visit:
+
+[Web-Service-Platform-Backend](https://web-service-data-platform.onrender.com/docs)
+
+### Start frontend service
 
 ```bash
 chmod +x frontend.sh
 ./frontend.sh
 ```
-Frontend will be exposed at:
+Frontend locally will be exposed at:
 
-http://localhost:4200
+[localhost](http://localhost:4200)
+
+and also it's delpoyed on **Render** so you van visit.
+
+[Web-Service-Platform-Frontend](https://web-service-data-platform-1.onrender.com/)
+
+---
 
 ### Example API Calls
 
@@ -54,6 +66,7 @@ curl -X GET http://localhost:8000/users
 ```bash
 curl -X GET http://localhost:8000/etl/analytics/correlation/AAPL
 ```
+---
 ### Project Structure
 ```text
 /backend
