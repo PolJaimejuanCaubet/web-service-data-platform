@@ -4,34 +4,36 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { 
-  UserCreate, 
-  UserLogin, 
-  RegisterResponse, 
+import {
+  UserCreate,
+  UserLogin,
+  RegisterResponse,
   LoginResponse,
   UserResponse,
-  FastAPIError, 
+  FastAPIError,
   UserUpdate
 } from '../models/user.models';
+
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'https://web-service-data-platform.onrender.com';
-  
+  private apiUrl = environment.apiUrl
+
   // BehaviorSubject para mantener el estado de autenticación
   // Emite true si hay token, false si no hay
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
-  
+
   // BehaviorSubject para mantener los datos del usuario actual
   private currentUserSubject = new BehaviorSubject<UserResponse | null>(
     this.getUserFromStorage()
   );
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * Verifica si existe un token en localStorage
@@ -57,7 +59,7 @@ export class AuthService {
    */
   register(userData: UserCreate): Observable<RegisterResponse> {
     return this.http.post<RegisterResponse>(
-      `${this.apiUrl}/auth/register`, 
+      `${this.apiUrl}/auth/register`,
       userData  // FastAPI espera JSON, no FormData
     ).pipe(
       tap(response => {
@@ -108,7 +110,7 @@ export class AuthService {
   private storeAuthData(response: LoginResponse): void {
     // Guardar token
     localStorage.setItem('access_token', response.access_token);
-    
+
     // Guardar datos básicos del usuario
     const userData: UserResponse = {
       full_name: '',  // No viene en la respuesta de login
@@ -117,9 +119,9 @@ export class AuthService {
       role: '',       // No viene en la respuesta de login
       id: response.user.id
     };
-    
+
     localStorage.setItem('current_user', JSON.stringify(userData));
-    
+
     // Notificar a los observadores
     this.isAuthenticatedSubject.next(true);
     this.currentUserSubject.next(userData);
@@ -134,7 +136,7 @@ export class AuthService {
     // Limpiar localStorage
     localStorage.removeItem('access_token');
     localStorage.removeItem('current_user');
-    
+
     // Notificar a los observadores
     this.isAuthenticatedSubject.next(false);
     this.currentUserSubject.next(null);
@@ -220,7 +222,7 @@ export class AuthService {
    */
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'An unknown error occurred';
-    
+
     if (error.error instanceof ErrorEvent) {
       // Error del lado del cliente
       errorMessage = `Client Error: ${error.error.message}`;
@@ -235,9 +237,9 @@ export class AuthService {
         errorMessage = `Server Error: ${error.status} - ${error.message}`;
       }
     }
-    
+
     console.error('HTTP Error:', errorMessage);
-    
+
     // Devolver un Observable que emite el error
     return throwError(() => new Error(errorMessage));
   }

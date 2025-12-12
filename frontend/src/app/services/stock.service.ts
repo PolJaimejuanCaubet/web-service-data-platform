@@ -1,23 +1,24 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { 
-  Stock, 
-  StockHistory, 
-  MarketSummary, 
-  AICorrelation, 
+import {
+  Stock,
+  StockHistory,
+  MarketSummary,
+  AICorrelation,
   TrendAnalysis,
-  AIPrediction 
+  AIPrediction
 } from '../models/stock.models';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class StockService {
-  
-  private apiUrl = 'https://web-service-data-platform.onrender.com';
-// https://web-service-data-platform.onrender.com/
-  constructor(private http: HttpClient) {}
+
+  private apiUrl = environment.apiUrl
+
+  constructor(private http: HttpClient) { }
 
   runETL(ticker: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/${ticker}/run`, {});

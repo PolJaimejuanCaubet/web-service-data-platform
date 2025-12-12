@@ -8,6 +8,8 @@ import { AuthService } from '../../services/auth';
 import { UserResponse, UserUpdate } from '../../models/user.models';
 import { HttpClient } from '@angular/common/http';
 
+import { environment } from '../../../environments/environment';
+
 @Component({
   selector: 'app-dashboard-admin',
   standalone: true,
@@ -39,7 +41,7 @@ export class DashboardAdminComponent implements OnInit {
     standardUsers: 0
   };
 
-  private apiUrl = 'https://web-service-data-platform.onrender.com';
+  private apiUrl = environment.apiUrl
 
   constructor(
     private authService: AuthService,
