@@ -8,9 +8,9 @@ from backend.app.models.mongo_logger import MongoLogger
 
 
 class UserService:
-    def __init__(self, collection, logger: MongoLogger):
+    def __init__(self, collection, log_collection: MongoLogger):
         self.collection = collection
-        self._logger = logger
+        self._log_collection = log_collection
 
     async def create_user(self, user_data: UserCreate):
         try:
@@ -18,7 +18,7 @@ class UserService:
                 {"username": user_data.username}
             )
             if existing_user:
-                await self._logger.log(
+                await self._log_collection.log(
                     service="UserService",
                     status="error",
                     message="User already exists",
@@ -32,7 +32,7 @@ class UserService:
             new_user = await self.collection.insert_one(user_dict)
             created_user = await self.collection.find_one({"_id": new_user.inserted_id})
 
-            await self._logger.log(
+            await self._log_collection.log(
                 service="UserService",
                 status="success",
                 message="User has been created succesfully",
@@ -41,7 +41,7 @@ class UserService:
 
             return created_user
         except Exception as e:
-            await self._logger.log(
+            await self._log_collection.log(
                 service="UserService", status="error", message="User not created"
             )
             raise e
@@ -55,7 +55,7 @@ class UserService:
             if not authenticated_user or not verify_password(
                 user.password, authenticated_user["password"]
             ):
-                await self._logger.log(
+                await self._log_collection.log(
                     service="UserService",
                     status="warning",
                     message="Login failed: Incorrect username or password",
@@ -75,7 +75,7 @@ class UserService:
                 expires_delta=access_token_expires,
             )
 
-            await self._logger.log(
+            await self._log_collection.log(
                 service="UserService",
                 status="success",
                 message="User logged in successfully",
@@ -85,7 +85,7 @@ class UserService:
 
         except Exception as e:
             if not isinstance(e, HTTPException):
-                await self._logger.log(
+                await self._log_collection.log(
                     service="UserService",
                     status="error",
                     message="Login error",
@@ -97,26 +97,33 @@ class UserService:
         _id = ObjectId(user_id)
         user = await self.collection.find_one({"_id": _id})
         user.pop("password", None)
-        return user    
-    
+        return user
+
     async def update_user(self, user_id: str, update_data: dict):
         try:
             _id = ObjectId(user_id)
             await self.collection.update_one({"_id": _id}, {"$set": update_data})
-            
+
             updated_user = await self.get_user_by_id(user_id)
-            
-            await self._logger.log(
+
+            await self._log_collection.log(
                 service="UserService",
                 status="success",
                 message="User updated successfully",
-                metadata={"user_id": user_id, "updated_fields": list(update_data.keys())}
+                metadata={
+                    "user_id": user_id,
+                    "updated_fields": list(update_data.keys()),
+                },
             )
             return updated_user
         except Exception as e:
-            await self._logger.log(service="UserService", status="error", message="Error updating user", metadata={"user_id": user_id, "error": str(e)})
+            await self._log_collection.log(
+                service="UserService",
+                status="error",
+                message="Error updating user",
+                metadata={"user_id": user_id, "error": str(e)},
+            )
             raise e
-    
 
     async def delete_user(self, user_id: str):
         try:
@@ -124,7 +131,14 @@ class UserService:
 
             user = await self.collection.find_one({"_id": _id})
             if not user:
-                await self._logger.log(service="UserService", status="error", message="User doesn't exist, cannot be deleted", metadata={"user_id": user_id, })
+                await self._log_collection.log(
+                    service="UserService",
+                    status="error",
+                    message="User doesn't exist, cannot be deleted",
+                    metadata={
+                        "user_id": user_id,
+                    },
+                )
                 return None
 
             email = user["email"]
@@ -135,16 +149,21 @@ class UserService:
             if result.deleted_count == 0:
                 return None
 
-            await self._logger.log(
+            await self._log_collection.log(
                 service="UserService",
                 status="success",
                 message="User deleted successfully",
-                metadata={"user_id": user_id}
+                metadata={"user_id": user_id},
             )
 
             return deletion_time, email, full_name
         except Exception as e:
-            await self._logger.log(service="UserService", status="error", message="Error deleting user", metadata={"user_id": user_id, "error": str(e)})
+            await self._log_collection.log(
+                service="UserService",
+                status="error",
+                message="Error deleting user",
+                metadata={"user_id": user_id, "error": str(e)},
+            )
             raise e
 
     async def get_all_users(self):
@@ -159,17 +178,22 @@ class UserService:
         return user_list
 
     async def update_role(self, user_id: str):
-        try: 
+        try:
             _id = ObjectId(user_id)
 
             await self.collection.update_one({"_id": _id}, {"$set": {"role": "admin"}})
-            await self._logger.log(
+            await self._log_collection.log(
                 service="UserService",
                 status="success",
                 message="User updated to admin role successfully",
-                metadata={"user_id": user_id}
+                metadata={"user_id": user_id},
             )
             return await self.get_user_by_id(user_id)
         except Exception as e:
-            await self._logger.log(service="UserService", status="error", message="Error updating role user", metadata={"user_id": user_id, "error": str(e)})
+            await self._log_collection.log(
+                service="UserService",
+                status="error",
+                message="Error updating role user",
+                metadata={"user_id": user_id, "error": str(e)},
+            )
             raise e

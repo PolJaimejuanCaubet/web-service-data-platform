@@ -7,39 +7,40 @@ from google import genai
 from google.genai import types
 
 from backend.app.models.models_data import Stock
+from backend.app.models.mongo_logger import MongoLogger
 
 
 class DataService:
-    def __init__(self, collection, log_collection, history_collection):
-        self.collection = collection
-        self.log_collection = log_collection
-        self.history_collection = history_collection
+    def __init__(
+        self, stock_collection, log_collection: MongoLogger, history_collection
+    ):
+        self._stock_collection = stock_collection
+        self._log_collection = log_collection
+        self._history_collection = history_collection
         self.BASE_URL = "https://api.stockdata.org/v1/data/quote"
 
-    async def log(self, ticker, status, timestamp, saved_id=None, info=None):
-        log_entry = {
-            "ticker": ticker,
-            "status": status,
-            "timestamp": timestamp,
-            "saved_id": saved_id,
-            "info": info,
-        }
-
-        await self.log_collection.insert_one(log_entry)
-
     async def run_etl_ticker(self, ticker: str):
-        response = httpx.get(
-            self.BASE_URL, params={"symbols": ticker, "api_token": env.STOCK_DATA}
-        )
-        response.raise_for_status()
-        data = response.json()
+        try:
+            response = httpx.get(
+                self.BASE_URL, params={"symbols": ticker, "api_token": env.STOCK_DATA}
+            )
+            response.raise_for_status()
+            data = response.json()
+        except Exception as e:
+            await self._log_collection.log(
+                service="DataService",
+                status="error",
+                message="HTTP request failed",
+                metadata={"ticker": ticker, "exception": str(e)},
+            )
+            return None
 
         if not data.get("data"):
-            await self.log(
-                ticker=ticker,
+            await self._log_collection.log(
+                service="DataService",
                 status="error",
-                timestamp=datetime.now(timezone.utc).isoformat(),
-                saved_id=None,
+                message="No data returned from API",
+                metadata={"ticker": ticker},
             )
             return None
 
@@ -56,7 +57,7 @@ class DataService:
             )
             stock_dict = stock_obj.model_dump()
 
-            await self.history_collection.insert_one(
+            await self._history_collection.insert_one(
                 {
                     "ticker": stock_dict["ticker"],
                     "price": stock_dict["price"],
@@ -65,43 +66,59 @@ class DataService:
                 }
             )
 
-            result = await self.collection.update_one(
-                {"ticker": stock_dict["ticker"]}, {"$set": stock_dict}, upsert=True
+            await self._stock_collection.update_one(
+                {"ticker": stock_dict["ticker"]},
+                {"$set": stock_dict},
+                upsert=True,
             )
 
-            await self.log(
-                ticker=stock_dict["ticker"],
+            await self._log_collection.log(
+                service="DataService",
                 status="success",
-                timestamp=datetime.now(timezone.utc).isoformat(),
-                saved_id=str(result.upserted_id) if result.upserted_id else None,
+                message="Stock ETL completed",
+                metadata={
+                    "ticker": stock_dict["ticker"],
+                    "price": stock_dict["price"],
+                    "day_change": stock_dict["day_change"],
+                },
             )
 
             return stock_dict
 
         except Exception as e:
-            await self.log(
-                ticker=item.get("ticker", "unknown"),
+            await self._log_collection.log(
+                service="DataService",
                 status="error",
-                timestamp=datetime.now(timezone.utc).isoformat(),
-                info=str(e),
+                message="ETL failed while processing ticker",
+                metadata={"ticker": "unknown", "exception": str(e)},
             )
             return None
 
     async def run_etl_tickers(self, tickers: list[str]):
         tickers_str = ",".join(tickers)
 
-        response = httpx.get(
-            self.BASE_URL, params={"symbols": tickers_str, "api_token": env.STOCK_DATA}
-        )
-        response.raise_for_status()
-        data = response.json()
+        try:
+            response = httpx.get(
+                self.BASE_URL,
+                params={"symbols": tickers_str, "api_token": env.STOCK_DATA},
+            )
+            response.raise_for_status()
+            data = response.json()
+        except Exception as e:
+            await self._log_collection.log(
+                service="DataService",
+                status="error",
+                message="Bulk ETL HTTP request failed",
+                metadata={"tickers": tickers, "exception": str(e)},
+            )
+            return []
 
         if not data.get("data"):
-            await self.log(
-                ticker=tickers_str,
+            await self._log_collection.log(
+                service="DataService",
                 status="error",
-                timestamp=datetime.now(timezone.utc).isoformat(),
-                saved_id=None,
+                message="No data returned for bulk ETL",
+                metadata={"tickers": tickers},
             )
             return []
 
@@ -119,7 +136,7 @@ class DataService:
                 )
                 stock_dict = stock_obj.model_dump()
 
-                await self.history_collection.insert_one(
+                await self._history_collection.insert_one(
                     {
                         "ticker": stock_dict["ticker"],
                         "price": stock_dict["price"],
@@ -128,25 +145,30 @@ class DataService:
                     }
                 )
 
-                result = await self.collection.update_one(
+                result = await self._stock_collection.update_one(
                     {"ticker": stock_dict["ticker"]}, {"$set": stock_dict}, upsert=True
                 )
 
-                await self.log(
-                    ticker=stock_dict["ticker"],
+                await self._log_collection.log(
+                    service="DataService",
                     status="success",
-                    timestamp=datetime.now(timezone.utc).isoformat(),
-                    saved_id=str(result.upserted_id) if result.upserted_id else None,
+                    message="Processed tickers",
+                    metadata={
+                        "ticker": stock_dict["ticker"],
+                        "saved_id": (
+                            str(result.upserted_id) if result.upserted_id else "updated"
+                        ),
+                    },
                 )
 
                 stocks_list.append(stock_dict)
 
             except Exception as e:
-                await self.log(
-                    ticker=item.get("ticker", "unknown"),
+                await self._log_collection.log(
+                    service="DataService",
                     status="error",
-                    timestamp=datetime.now(timezone.utc).isoformat(),
-                    info=str(e),
+                    message="Bulk ETL failed for ticker",
+                    metadata={"ticker": item.get("ticker"), "exception": str(e)},
                 )
 
         return stocks_list
@@ -156,7 +178,12 @@ class DataService:
         processed = await self.run_etl_ticker(ticker)
 
         if not processed:
-            await self.log(ticker, "error", datetime.now(timezone.utc).isoformat())
+            await self._log_collection.log(
+                service="DataService",
+                status="error",
+                message="Cannot generate video, ETL failed",
+                metadata={"ticker": ticker},
+            )
             return None
 
         day_change = processed["day_change"]
@@ -165,36 +192,49 @@ class DataService:
         client = genai.Client(api_key=env.GOOGLE_API_KEY)
 
         if day_change < 0:
-            prompt = f"""Tesla crash day. The Wall Street trading floor is in utter panic. People are seen on the floor with faces of terror and desperation, yelling and holding their heads. Monitors show a {day_change} drop in {name} stock value, bright red and blinking. The atmosphere is chaotic and frenetic. The camera zooms in on the face of a young, sweaty trader who looks like he has lost everything. Documentary film style, with grain and high energy."""
+            prompt = f"""Crash day. The Wall Street trading floor is in utter panic. People are seen on the floor with faces of terror and desperation, yelling and holding their heads. Monitors show a {day_change} drop in {name} stock value, bright red and blinking. The atmosphere is chaotic and frenetic. The camera zooms in on the face of a young, sweaty trader who looks like he has lost everything. Documentary film style, with grain and high energy."""
 
         if day_change > 0:
             prompt = f"""
-            Tesla boom day. The Wall Street trading floor is in absolute euphoria. Traders are shouting for joy, hugging each other, throwing papers into the air, and pumping their fists triumphantly. Large monitors everywhere are flashing green, showing '{name} +{day_change}'. The atmosphere is loud, celebratory, and triumphant. The camera zooms in on the face of a successful young trader smiling and cheering, celebrating a massive, unexpected win. Cinematic documentary film style, high contrast, vibrant green glow reflecting on faces, high energy.
+            Boom day. The Wall Street trading floor is in absolute euphoria. Traders are shouting for joy, hugging each other, throwing papers into the air, and pumping their fists triumphantly. Large monitors everywhere are flashing green, showing '{name} + {day_change}'. The atmosphere is loud, celebratory, and triumphant. The camera zooms in on the face of a successful young trader smiling and cheering, celebrating a massive, unexpected win. Cinematic documentary film style, high contrast, vibrant green glow reflecting on faces, high energy.
             """
-        operation = client.models.generate_videos(
-            model="veo-3.1-generate-preview",
-            prompt=prompt,
-            config=types.GenerateVideosConfig(
-                number_of_videos=1, resolution="720p", aspect_ratio="16:9"
-            ),
-        )
+        try:
+            operation = client.models.generate_videos(
+                model="veo-3.1-generate-preview",
+                prompt=prompt,
+                config=types.GenerateVideosConfig(
+                    number_of_videos=1, resolution="720p", aspect_ratio="16:9"
+                ),
+            )
 
-        while not operation.done:
-            time.sleep(10)
-            operation = client.operations.get(operation)
+            while not operation.done:
+                time.sleep(10)
+                operation = client.operations.get(operation)
 
-        generated_video = operation.response.generated_videos[0]
-        client.files.download(file=generated_video.video)
-        video_path = f"backend/app/videos/video_{ticker}_{datetime.now().date()}.mp4"
-        generated_video.video.save(video_path)
+            generated_video = operation.response.generated_videos[0]
+            client.files.download(file=generated_video.video)
+            video_path = (
+                f"backend/app/videos/video_{ticker}_{datetime.now().date()}.mp4"
+            )
+            generated_video.video.save(video_path)
 
-        await self.log(
-            ticker=ticker,
-            status="success",
-            timestamp=datetime.now(timezone.utc).isoformat(),saved_id=video_path, info="Gemini video generated"
-        )
+            await self._log_collection.log(
+                service="DataService",
+                status="success",
+                message="Video generated",
+                metadata={"ticker": ticker, "file": video_path},
+            )
 
-        return {"file": video_path, "prompt_used": prompt}
+            return {"file": video_path, "prompt_used": prompt}
+
+        except Exception as e:
+            await self._log_collection.log(
+                service="DataService",
+                status="error",
+                message="Video generation failed",
+                metadata={"ticker": ticker, "exception": str(e)},
+            )
+            return None
 
     async def stock_results(self, ticker: str):
         return await self.collection.find_one({"ticker": ticker})
@@ -208,22 +248,15 @@ class DataService:
             resultados.append(entry)
         return resultados
 
-    async def scheduled_stock_updates(self, tickers):
-        for ticker in tickers:
-            await self.run_etl_tickers(ticker)
-
     async def market_summary(self, tickers):
-        stocks = []
-        updated_stocks_list = await self.run_etl_tickers(tickers)
-
-        stocks = updated_stocks_list
+        stocks = await self.run_etl_tickers(tickers)
 
         if not stocks:
-            await self.log(
-                ticker=",".join(tickers),
+            await self._log_collection.log(
+                service="DataService",
                 status="error",
-                timestamp=datetime.now(timezone.utc).isoformat(),
-                info="Not valid tickers",
+                message="Invalid tickers for market summary",
+                metadata={"tickers": tickers},
             )
             return {
                 "tickers": tickers,
@@ -233,18 +266,12 @@ class DataService:
                 "top_loser": None,
             }
 
-        avg_price = sum(s["price"] for s in stocks) / len(stocks)
-        avg_change = sum(s["day_change"] for s in stocks) / len(stocks)
-
-        top_gainer = max(stocks, key=lambda x: x["day_change"])
-        top_loser = min(stocks, key=lambda x: x["day_change"])
-
         return {
             "tickers": tickers,
-            "average_price": avg_price,
-            "average_day_change": avg_change,
-            "top_gainer": top_gainer,
-            "top_loser": top_loser,
+            "average_price": sum(s["price"] for s in stocks) / len(stocks),
+            "average_day_change": sum(s["day_change"] for s in stocks) / len(stocks),
+            "top_gainer": max(stocks, key=lambda x: x["day_change"]),
+            "top_loser": min(stocks, key=lambda x: x["day_change"]),
         }
 
     async def ai_correlation(self, ticker):
@@ -274,27 +301,23 @@ class DataService:
     async def trend_analysis(self, tickers):
         stocks = []
         for ticker in tickers:
-            stock = await self.run_etl_ticker(ticker)
-            if stock:
-                stocks.append(stock)
+            s = await self.run_etl_ticker(ticker)
+            if s:
+                stocks.append(s)
 
         if not stocks:
-            await self.log(
-                tickers,
-                "error",
-                datetime.now(timezone.utc).isoformat(),
-                info="Not valid tickers",
+            await self._log_collection.log(
+                service="DataService",
+                status="error",
+                message="Trend analysis failed: invalid tickers",
+                metadata={"tickers": tickers},
             )
-
-        up = [s for s in stocks if s["day_change"] > 1]
-        down = [s for s in stocks if s["day_change"] < -1]
-        stable = [s for s in stocks if -1 <= s["day_change"] <= 1]
 
         return {
             "total": len(stocks),
-            "up": up,
-            "down": down,
-            "stable": stable,
+            "up": [s for s in stocks if s["day_change"] > 1],
+            "down": [s for s in stocks if s["day_change"] < -1],
+            "stable": [s for s in stocks if -1 <= s["day_change"] <= 1],
         }
 
     async def analytics_history(self, ticker: str):

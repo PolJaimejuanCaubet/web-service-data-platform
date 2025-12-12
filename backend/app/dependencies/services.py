@@ -16,8 +16,8 @@ def get_user_service(
 
 
 def get_data_service(
-    collection=Depends(get_stocks_collection),
-    log_collection=Depends(get_logs_collection),
+    stock_collection=Depends(get_stocks_collection),
+    log_collection=Depends(get_logger),
     history_collection=Depends(get_history_collection),
 ):
-    return DataService(collection, log_collection, history_collection)
+    return DataService(stock_collection, log_collection, history_collection)
