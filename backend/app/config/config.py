@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     DB_NAME: str
     DB_USER_COLLECTION: str
     DB_STOCKS_COLLECTION: str
-    DB_ETL_LOGS_COLLECTION: str
+    DB_LOGS_COLLECTION: str
     DB_HISTORY_COLLECTION: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     

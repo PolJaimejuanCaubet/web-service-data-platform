@@ -1,4 +1,3 @@
-import asyncio
 from fastapi import FastAPI
 from backend.app.routers.auth import router as auth_router
 from backend.app.routers.etl import router as data_router
@@ -9,7 +8,6 @@ import certifi
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.config.config import settings as env
 from backend.app.database.database import *
-from backend.app.services.data_service import DataService
 
 
 @asynccontextmanager
@@ -21,11 +19,11 @@ async def lifespan(app: FastAPI):
 
     await db_manager.db[env.DB_USER_COLLECTION].create_index("username", unique=True)
     await db_manager.db[env.DB_STOCKS_COLLECTION].create_index("ticker", unique=True)
-    await db_manager.db[env.DB_ETL_LOGS_COLLECTION].create_index("ticker")
+    await db_manager.db[env.DB_LOGS_COLLECTION].create_index("ticker")
     await db_manager.db[env.DB_HISTORY_COLLECTION].create_index("ticker")
 
     yield
-    
+
     db_manager.client.close()
 
 

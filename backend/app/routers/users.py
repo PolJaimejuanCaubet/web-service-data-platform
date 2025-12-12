@@ -108,4 +108,4 @@ async def update_role(
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return {"role": f"User with _id {user_id} now has new role - {user["role"]}"}
+    return {"role": f"User {user_id} now has new role - {user["role"]}"}
