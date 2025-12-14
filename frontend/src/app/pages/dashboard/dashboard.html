@@ -292,8 +292,9 @@
             </span>
           </p>
         </div>
+        <br>
         <div class="ai-analysis-box">
-          <p>{{ aiCorrelation.ai_analysis }}</p>
+          <markdown [data]="aiCorrelation.ai_analysis"></markdown>
         </div>
       </div>
 
@@ -305,7 +306,8 @@
         </div>
         <div class="prediction-box">
           <h4>Forecast</h4>
-          <p>{{ aiPrediction.prediction }}</p>
+          <br>
+          <markdown [data]="aiPrediction.prediction"></markdown>
         </div>
         <div class="prediction-disclaimer">
           <small>⚠️ This is an AI-generated prediction for educational purposes only. Not financial advice.</small>

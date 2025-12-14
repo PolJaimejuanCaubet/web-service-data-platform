@@ -4,6 +4,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { MarkdownModule } from 'ngx-markdown';
 import { AuthService } from '../../services/auth';
 import { StockService } from '../../services/stock.service';
 import { UserResponse } from '../../models/user.models';
@@ -12,7 +13,7 @@ import { Stock, MarketSummary, AICorrelation, TrendAnalysis, AIPrediction } from
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, MarkdownModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
@@ -24,7 +25,7 @@ export class DashboardComponent implements OnInit {
   activeView: 'overview' | 'stocks' | 'analysis' | 'video' = 'overview';
   
   selectedTicker = '';
-  availableTickers = ['AAPL', 'TSLA', 'NVDA', 'MSFT', 'AMZN', 'META', 'GOOGL'];
+  availableTickers = ['AAPL', 'TSLA', 'NVDA', 'MSFT', 'AMZN', 'META', 'GOOGL', 'VS', 'MA'];
   
   // Para Overview
   selectedTickersForOverview: string[] = [];
