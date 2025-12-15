@@ -237,11 +237,11 @@ class DataService:
             return None
 
     async def stock_results(self, ticker: str):
-        return await self.collection.find_one({"ticker": ticker})
+        return await self._stock_collection.find_one({"ticker": ticker})
 
     async def stock_history(self, ticker: str):
 
-        cursor = self.log_collection.find({"ticker": ticker}).sort("timestamp", -1)
+        cursor = self._stock_collection.find({"ticker": ticker}).sort("timestamp", -1)
 
         resultados = []
         async for entry in cursor:
@@ -322,7 +322,7 @@ class DataService:
 
     async def analytics_history(self, ticker: str):
 
-        cursor = self.history_collection.find({"ticker": ticker}).sort("timestamp", -1)
+        cursor = self._history_collection.find({"ticker": ticker}).sort("timestamp", -1)
 
         resultados = []
         async for entry in cursor:
@@ -347,6 +347,7 @@ class DataService:
             model="gemini-2.0-flash",
             contents=prompt,
         )
+        
 
         return {
             "ticker": ticker,
