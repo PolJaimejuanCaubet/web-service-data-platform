@@ -46,7 +46,7 @@ Frontend locally will be exposed at:
 
 and also it's delpoyed on **Render** so you van visit.
 
-[Web-Service-Platform-Frontend](https://web-service-data-platform-1.onrender.com/)
+[Web-Service-Platform-Frontend](https://jordi-posam-bona-nota.onrender.com)
 
 ---
 
@@ -108,5 +108,6 @@ pyproject.toml              # Python dependencies and project configuration
 README.md                   # Full project documentation
 uv.lock                     # Locked dependency versions for reproducible builds
 ```
+
 
 
