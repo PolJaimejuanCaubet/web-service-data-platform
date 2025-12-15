@@ -1,4 +1,12 @@
 # [Web-Service-Platform-Frontend](https://web-service-data-platform-1.onrender.com/)
+### Technologies used
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![FastApi](https://img.shields.io/badge/fastapi-05998b?style=for-the-badge&logo=fastapi&logoColor=white)
+![Angular](https://img.shields.io/badge/angular.js-%23E23237.svg?style=for-the-badge&logo=angular&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
+![Render](https://img.shields.io/badge/Render-black.svg?style=for-the-badge&logo=render&logoColor=white)
+![Jupyter Notebook](https://img.shields.io/badge/jupyter-%23FA0F00.svg?style=for-the-badge&logo=jupyter&logoColor=white)
+![Git](https://img.shields.io/badge/git-%23F05033.svg?style=for-the-badge&logo=git&logoColor=white)
 
 Web service that provides and manages data through a clear and easy to use REST API. The project is organized into separate services, making it a solid base for building data features, small independent microservices, and systems that need to connect or share information.
 
@@ -100,4 +108,5 @@ pyproject.toml              # Python dependencies and project configuration
 README.md                   # Full project documentation
 uv.lock                     # Locked dependency versions for reproducible builds
 ```
+
 
