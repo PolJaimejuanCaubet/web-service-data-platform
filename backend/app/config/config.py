@@ -1,7 +1,9 @@
 from pydantic_settings import BaseSettings
 
+
 class Settings(BaseSettings):
     GOOGLE_API_KEY: str
+    GEMINI_API_KEY: str
     STOCK_DATA: str
     MONGO_URI: str
     JWT_SECRET: str
@@ -12,9 +14,9 @@ class Settings(BaseSettings):
     DB_LOGS_COLLECTION: str
     DB_HISTORY_COLLECTION: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
-    
-    
+
     class Config:
         env_file = ".env"
+
 
 settings = Settings()
