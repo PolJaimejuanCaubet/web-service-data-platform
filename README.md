@@ -1,4 +1,33 @@
-# [Web-Service-Platform-Frontend](https://please-teacher-grade-us-well.onrender.com)
+<div align="center">
+
+<img src="https://media.istockphoto.com/id/961649530/vector/finance-graphic-bars-up-rising-arrow-vector-illustration-design.jpg?s=612x612&w=0&k=20&c=sXxosOL8SggL-XNdrm3QP05YFcmTlerS9wqkmB6O-TM=" width="200"/>
+
+
+
+# Stock Web Service
+
+
+A website where you can overview stock data and generate videos from each stock
+
+[Explore the docs »](https://web-service-data-platform.onrender.com/docs)
+
+<br/>
+
+[View Demo](https://please-teacher-grade-us-well.onrender.com) · [Report Bug](https://github.com/PolJaimejuanCaubet/web-service-data-platform/issues) · [Request Feature](https://github.com/PolJaimejuanCaubet/web-service-data-platform/issues)
+
+<br/>
+
+[![Contributors 1](https://img.shields.io/badge/contributors-1-green)](https://github.com/PolJaimejuanCaubet/web-service-data-platform/contributors) 
+[![Issues 0 open](https://img.shields.io/github/issues/username/repo?color=green)](https://github.com/PolJaimejuanCaubet/web-service-data-platform/issues) 
+[![License not specified](https://img.shields.io/badge/license-not%20specified-lightgrey)]()
+
+</div>
+
+
+
+
+
+# Web Service Platform
 ### Technologies used
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![FastApi](https://img.shields.io/badge/fastapi-05998b?style=for-the-badge&logo=fastapi&logoColor=white)
