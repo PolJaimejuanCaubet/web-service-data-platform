@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 import time
+from bson import ObjectId
+from fastapi.encoders import jsonable_encoder
 import httpx
 from backend.app.config.config import settings as env
 import time
@@ -347,10 +349,15 @@ class DataService:
             model="gemini-2.0-flash",
             contents=prompt,
         )
-        
 
         return {
             "ticker": ticker,
             "price": stock["price"],
             "prediction": result.text,
         }
+
+    async def log_history(self, db):
+        cursor = db[env.DB_LOGS_COLLECTION].find({})
+        docs = [doc async for doc in cursor]
+
+        return jsonable_encoder(docs, custom_encoder={ObjectId: str})

@@ -3,9 +3,10 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 
+from backend.app.database.database import get_db
 from backend.app.dependencies.services import get_data_service
 from backend.app.services.data_service import DataService
-
+from mongomock import Collection
 
 router = APIRouter(prefix="/etl")
 
@@ -114,3 +115,10 @@ async def analytics_prediction(
     ticker: str, service: DataService = Depends(get_data_service)
 ):
     return await service.ai_prediction(ticker)
+
+
+@router.get("/history/logs")
+async def log_history(
+    service: DataService = Depends(get_data_service), db=Depends(get_db)
+):
+    return await service.log_history(db)
