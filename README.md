@@ -1,4 +1,4 @@
-# [Web-Service-Platform-Frontend](https://jordi-posam-bona-nota.onrender.com)
+# [Web-Service-Platform-Frontend](https://please-teacher-grade-us-well.onrender.com)
 ### Technologies used
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![FastApi](https://img.shields.io/badge/fastapi-05998b?style=for-the-badge&logo=fastapi&logoColor=white)
@@ -46,7 +46,7 @@ Frontend locally will be exposed at:
 
 and also it's delpoyed on **Render** so you van visit.
 
-[Web-Service-Platform-Frontend](https://jordi-posam-bona-nota.onrender.com)
+[Web-Service-Platform-Frontend](https://please-teacher-grade-us-well.onrender.com)
 
 ---
 
