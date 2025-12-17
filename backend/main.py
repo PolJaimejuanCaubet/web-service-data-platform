@@ -9,7 +9,6 @@ import certifi
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.config.config import settings as env
 from backend.app.database.database import *
-from backend.app.services.data_service import DataService
 
 
 @asynccontextmanager
