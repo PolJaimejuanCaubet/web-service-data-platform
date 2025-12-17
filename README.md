@@ -9,7 +9,7 @@
 
 A website where you can overview stock data and generate videos from each stock
 
-**[Explore the docs »]**(https://web-service-data-platform.onrender.com/docs)
+**[Explore the docs »](https://web-service-data-platform.onrender.com/docs)**
 
 <br/>
 
@@ -137,6 +137,7 @@ pyproject.toml              # Python dependencies and project configuration
 README.md                   # Full project documentation
 uv.lock                     # Locked dependency versions for reproducible builds
 ```
+
 
 
 
