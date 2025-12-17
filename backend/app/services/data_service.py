@@ -6,7 +6,6 @@ from mongomock import Collection
 from backend.app.config.config import settings as env
 from google import genai
 from google.genai import types, errors
-from backend.app.models.models_data import Stock
 from backend.app.models.mongo_logger import MongoLogger
 
 
